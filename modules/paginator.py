@@ -12,11 +12,6 @@ def paginate_labels_same_dimension(input_pdf_path, output_pdf_path, output_page_
     page_widht, page_heigth = pageinfo.get_page_width_and_height(input_pdf_path, 0)
     rows = int(output_page_height_pts // page_heigth)
     columns = int(output_page_width_pts // page_widht)
-    bbox = pageinfo.get_outer_bbox(input_pdf_path,0)
-    stroke = pageinfo.get_bboxlog_stroke_path(input_pdf_path,0)
-    print(f"bbox info x0: {bbox.x0} y0: {bbox.y0} x1:{bbox.x1} y1:{bbox.y1}")
-    print(f"stroke path info x0: {stroke.x0} y0: {stroke.y0} x1:{stroke.x1} y1:{stroke.y1}")
-    border_width =  bbox.x0 - stroke.x0
     labels_per_page = rows * columns
     num_labels = len(reader.pages)
     num_pages = math.ceil(num_labels / labels_per_page)
@@ -28,9 +23,9 @@ def paginate_labels_same_dimension(input_pdf_path, output_pdf_path, output_page_
         new_pdf_page = PageObject.create_blank_page(width=output_page_width_pts, height=output_page_height_pts)
         print("Blank page created.")
         
-        horizontal_margin = (output_page_width_pts - (columns * page_widht)) / 2 - border_width * 2 
+        horizontal_margin = (output_page_width_pts - (columns * page_widht)) / 2
         print(f"Horizontal margin: {converter.pt_to_mm(horizontal_margin)}") 
-        vertical_margin = (output_page_height_pts - (rows * page_heigth)) / 2 - border_width * 2
+        vertical_margin = (output_page_height_pts - (rows * page_heigth)) / 2
         print(f"Vertical margin: {converter.pt_to_mm(vertical_margin)}")
         for row in range(rows):
             for column in range(columns):
