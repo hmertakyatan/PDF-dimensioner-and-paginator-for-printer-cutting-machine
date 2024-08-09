@@ -3,12 +3,13 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog,QMessageBox, QLineEdit, QWidget, QHBoxLayout, QLabel, QPushButton, QListWidgetItem
 from PyPDF2 import PdfReader, PdfWriter
 from ui.qt.ui_dimensioner_window import Ui_DimensionerWindow
-from modules.dimensioner import scale_page_content, save_scaled_pdf
+from modules.dimensioner import scale_page_content
 import traceback
 from PyPDF2 import PdfReader, PdfWriter
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QListWidgetItem, QWidget
 import os
+import pymupdf
 
 class PDFDimensionerApp(QtWidgets.QMainWindow):
     def __init__(self):
@@ -92,13 +93,13 @@ class PDFDimensionerApp(QtWidgets.QMainWindow):
             if not input_pdfs:
                 QMessageBox.critical(self, "Error", "No input PDF files selected.")
                 return
-
-            writer = PdfWriter()
+            
+            output_doc = pymupdf.open()
             for input_pdf, count in input_pdfs:
-                scaled_writer = scale_page_content(input_pdf, label_width, label_height, count)
-                for page in scaled_writer.pages:
-                    writer.add_page(page)
-            save_scaled_pdf(writer, output_path)
+                doc = scale_page_content(input_pdf, label_width, label_height, count)
+                output_doc.insert_pdf(doc)   
+            output_doc.save(output_path)
+            output_doc.close()
 
             QMessageBox.information(self, "Success", "PDF created successfully!")
         except Exception as e:

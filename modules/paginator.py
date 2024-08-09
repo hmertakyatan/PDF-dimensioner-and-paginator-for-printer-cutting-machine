@@ -1,46 +1,52 @@
 import math
-from pypdf import PdfReader, PdfWriter, PageObject
 from utils import dimension_converters as converter
 from modules import page_info_service as pageinfo
-
-def paginate_labels_same_dimension(input_pdf_path, output_pdf_path, output_page_width_mm, output_page_height_mm):
-    reader = PdfReader(input_pdf_path)
-    writer = PdfWriter()
+import pymupdf
+MINIMUM_MARGIN = converter.mm_to_pt(1.5) #MM
+def paginate_labels_same_dimension(input_pdf_path, output_page_width_mm, output_page_height_mm):
     
     output_page_width_pts = converter.mm_to_pt(output_page_width_mm)
     output_page_height_pts = converter.mm_to_pt(output_page_height_mm)
-    page_widht, page_heigth = pageinfo.get_page_width_and_height(input_pdf_path, 0)
-    rows = int(output_page_height_pts // page_heigth)
-    columns = int(output_page_width_pts // page_widht)
-    labels_per_page = rows * columns
-    num_labels = len(reader.pages)
-    num_pages = math.ceil(num_labels / labels_per_page)
-    label_index = 0
-    i = 0
-    
+    input_page_rects = pageinfo.get_page_rect(input_pdf_path, 0)
 
-    for _ in range(num_pages):
-        new_pdf_page = PageObject.create_blank_page(width=output_page_width_pts, height=output_page_height_pts)
-        print("Blank page created.")
-        
-        horizontal_margin = (output_page_width_pts - (columns * page_widht)) / 2
-        print(f"Horizontal margin: {converter.pt_to_mm(horizontal_margin)}") 
-        vertical_margin = (output_page_height_pts - (rows * page_heigth)) / 2
-        print(f"Vertical margin: {converter.pt_to_mm(vertical_margin)}")
+    input_doc = pymupdf.open(input_pdf_path)
+    output_doc = pymupdf.open()
+
+    rows = int(output_page_height_pts // input_page_rects.height)
+    columns = int(output_page_width_pts // input_page_rects.width)
+
+    if((output_page_height_pts - (input_page_rects.height * rows)) < MINIMUM_MARGIN):
+        rows -=1     
+    if((output_page_width_pts-(input_page_rects.width * columns)) < MINIMUM_MARGIN):
+        columns -=1
+   
+    labels_quantity = input_doc.page_count
+    labels_per_page = rows * columns
+    page_quantity = math.ceil(labels_quantity / labels_per_page)
+    label_index = 0
+    for _ in range(page_quantity):
+        output_page = pymupdf.utils.new_page(doc=output_doc, width=output_page_width_pts, height=output_page_height_pts)
+        horizontal_margin = (output_page_width_pts - (input_page_rects.width * columns)) / 2
+        vertical_margin = (output_page_height_pts - (input_page_rects.height * rows)) / 2
+
         for row in range(rows):
             for column in range(columns):
-                if label_index < num_labels:
-                    label_page = reader.pages[label_index]
-                    x_position = horizontal_margin + column * page_widht
-                    y_position = vertical_margin + (rows - row - 1) * page_heigth
-                    temp_page = PageObject.create_blank_page(width=output_page_width_pts, height=output_page_height_pts)
-                    temp_page.merge_translated_page(label_page, tx=x_position  , ty=y_position)
-                    new_pdf_page.merge_page(temp_page)
-                  
-                    label_index += 1
-        writer.add_page(new_pdf_page)
-        i += 1
-        print(i, ".page done.")
+                if(label_index < input_doc.page_count):
+                    x0 = horizontal_margin + column * input_page_rects.width
+                    y0 = vertical_margin + row * input_page_rects.height
+                    input_page_coordinate = pymupdf.Rect(x0, y0, x0 + input_page_rects.width, y0 + input_page_rects.height)
+                    pymupdf.utils.show_pdf_page(
+                        rect=input_page_coordinate,
+                        page= output_page,
+                        src=input_doc,
+                        pno= label_index,
+                    )
+                    label_index +=1
+    return output_doc  
+            
 
-    with open(output_pdf_path, "wb") as output_pdf:
-        writer.write(output_pdf)
+
+
+    
+
+    

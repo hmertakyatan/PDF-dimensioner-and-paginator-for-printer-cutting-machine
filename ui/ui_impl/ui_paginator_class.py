@@ -5,6 +5,7 @@ from PyPDF2 import PdfReader, PdfWriter
 from ui.qt.ui_pagination_window import Ui_PaginatorWindow
 from modules import paginator
 import traceback
+import pymupdf
 class PDFPaginatorApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -56,29 +57,17 @@ class PDFPaginatorApp(QtWidgets.QMainWindow):
                 QMessageBox.critical(self, "Error", "No input PDF files selected.")
                 return
 
-            output_writer = PdfWriter()
-
+            output_doc = pymupdf.open()
             for input_path in self.selected_files:
                 if not os.path.isfile(input_path):
                     QMessageBox.critical(self, "Error", f"File not found: {input_path}")
                     return
 
-                output_pdf_path = f"paginated_{os.path.basename(input_path)}"
-                paginator.paginate_labels_same_dimension(input_path, output_pdf_path, output_width, output_height)
+            doc = paginator.paginate_labels_same_dimension(input_path, output_width, output_height)
+            output_doc.insert_pdf(doc)
+            output_doc.save(output_path)
+            output_doc.close()    
 
-                with open(output_pdf_path, "rb") as f:
-                    pdf_reader = PdfReader(f)
-                    for page in pdf_reader.pages:
-                        output_writer.add_page(page)
-
-            with open(output_path, "wb") as output_pdf:
-                output_writer.write(output_pdf)
-
-            # Cleanup: delete the temporary paginated PDF files
-            for input_path in self.selected_files:
-                output_pdf_path = f"paginated_{os.path.basename(input_path)}"
-                if os.path.isfile(output_pdf_path):
-                    os.remove(output_pdf_path)
 
             QMessageBox.information(self, "Success", "PDF created successfully!")
         except Exception as e:

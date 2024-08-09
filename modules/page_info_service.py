@@ -1,9 +1,8 @@
 import pymupdf
 from PyPDF2 import PdfReader
 
-def get_bbox(input_pdf_path, page_num):
-    doc = pymupdf.open(input_pdf_path)
-    page = doc.load_page(page_num)
+def get_bbox(page):
+    page_rect = page.rect
     drawings = page.get_drawings()
     if not drawings:
         return None
@@ -21,10 +20,12 @@ def get_bbox(input_pdf_path, page_num):
         y0_min = min(y0_min, rect.y0)
         x1_max = max(x1_max, rect.x1)
         y1_max = max(y1_max, rect.y1)
-
+    x0_min=max(0,x0_min)
+    y0_min=max(0,y0_min)
+    x1_max=min(page_rect.x1, x1_max)
+    y1_max= min(page_rect.y1, y1_max)
     bbox_rect = pymupdf.Rect(x0_min, y0_min, x1_max, y1_max)
 
-    doc.close()
     return bbox_rect
 
 def get_stroke_line_width(input_pdf_path,page_num):
@@ -80,10 +81,10 @@ def get_stroke_path(input_pdf_path, page_num):
     else:
         return pymupdf.Rect(en_soldaki, en_yukari, en_sagdaki, en_asagi)
 
-def get_page_width_and_height(input_pdf_path, page_num):
-    reader = PdfReader(input_pdf_path)
-    page = reader.pages[page_num]
+def get_page_rect(input_pdf_path, page_num):
+    input_doc = pymupdf.open(input_pdf_path)
+    page = input_doc.load_page(page_num)
     
-    return page.mediabox.width, page.mediabox.height
+    return page.rect
     
         
