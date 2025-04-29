@@ -1,11 +1,8 @@
-from PyPDF2 import PdfReader, PdfWriter, Transformation, PageObject
-from PyPDF2.generic import RectangleObject
 from modules import page_info_service as pageinfo
 from utils import dimension_converters as converter
-from utils import axis_fixer
 import pymupdf
 
-def scale_page_content(input_pdf_path, new_width_mm, new_height_mm, quantity):
+def scale_page_content(input_pdf_path, new_width_mm, new_height_mm, quantity, rotate):
     new_width_pts = converter.mm_to_pt(new_width_mm)
     new_height_pts = converter.mm_to_pt(new_height_mm)
     input_doc = pymupdf.open(input_pdf_path)
@@ -21,7 +18,10 @@ def scale_page_content(input_pdf_path, new_width_mm, new_height_mm, quantity):
                 src=input_doc,
                 pno=page_num,
                 keep_proportion=False,
-                clip=bbox_rect
+                clip=bbox_rect,
+                rotate=rotate
+
+                
             )
     
     return output_doc
