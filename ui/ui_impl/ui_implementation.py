@@ -59,41 +59,40 @@ class App(QtWidgets.QMainWindow):
             return
 
         for file_path in new_files:
-            for file_path in new_files:
-                widget = QWidget()
-                layout = QHBoxLayout(widget)
-                layout.setContentsMargins(5, 5, 5, 5)
-                layout.setSpacing(10)
+            widget = QWidget()
+            layout = QHBoxLayout(widget)
+            layout.setContentsMargins(5, 5, 5, 5)
+            layout.setSpacing(10)
 
-                file_label = QLabel(os.path.basename(file_path))
-                file_label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Preferred)
+            file_label = QLabel(os.path.basename(file_path))
+            file_label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
-                if page_index == self.PAGE_INDEX_DIMENSIONER:
-                    count_input = QLineEdit("1")
-                    count_input.setFixedWidth(120)
-                    count_input.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-                    layout.addWidget(count_input)
-                else:
-                    count_input = None
-
-                remove_button = QPushButton("✖")
-                remove_button.setFixedWidth(50)
-                remove_button.setStyleSheet("color: red; font-weight: bold;")
-
-                layout.addWidget(file_label)
+            if page_index == self.PAGE_INDEX_DIMENSIONER:
+                count_input = QLineEdit("1")
+                count_input.setFixedWidth(120)
+                count_input.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                 layout.addWidget(count_input)
-                layout.addWidget(remove_button)
+            else:
+                count_input = None
 
-                widget.file_path = file_path
-                widget.quantity_edit = count_input
-                widget.remove_button = remove_button
+            remove_button = QPushButton("✖")
+            remove_button.setFixedWidth(50)
+            remove_button.setStyleSheet("color: red; font-weight: bold;")
 
-                item = QListWidgetItem(list_widget)
-                item.setSizeHint(widget.sizeHint())
-                list_widget.addItem(item)
-                list_widget.setItemWidget(item, widget)
+            layout.addWidget(file_label)
+            layout.addWidget(count_input)
+            layout.addWidget(remove_button)
 
-                remove_button.clicked.connect(lambda _, item=item, file_path=file_path, page_index=page_index: self.remove_pdf_file(item, file_path, page_index))
+            widget.file_path = file_path
+            widget.quantity_edit = count_input
+            widget.remove_button = remove_button
+
+            item = QListWidgetItem(list_widget)
+            item.setSizeHint(widget.sizeHint())
+            list_widget.addItem(item)
+            list_widget.setItemWidget(item, widget)
+
+            remove_button.clicked.connect(lambda _, item=item, file_path=file_path, page_index=page_index: self.remove_pdf_file(item, file_path, page_index))
 
     def remove_pdf_file(self, item, file_path, page_index):
         list_widget = None
